@@ -16,7 +16,9 @@ var maxFreq = 6000;
 var maxVol = 0.02;
 
 var initialFreq = 3000;
-var initialVol = 0.001;
+
+// .00001 increments work
+var initialVol = 0.0000;
 
 // set options for the oscillator
 
@@ -27,6 +29,27 @@ oscillator.start();
 gainNode.gain.value = initialVol;
 
 
-/*
-TODO: Get the left hand y axis to control the volume.
-*/
+// Store frame for motion functions
+var previousFrame = null;
+
+// Setup Leap loop with frame callback function
+var controllerOptions = {enableGestures: true};
+
+// to use HMD mode:
+// controllerOptions.optimizeHMD = true;
+
+Leap.loop(controllerOptions, function(frame) {
+  if (frame.hands.length > 0) {
+    var left = frame.hands[0].type === "left" ? frame.hands[0] : frame.hands[1];
+    // palmPosition is an array with [x,y,z] coordinates.
+    var volumeCoordinate = left.palmPosition[1];
+    
+    // volume should go from y = 100 to y = 300?
+    volumeCoordinate = Math.max(volumeCoordinate, 100);
+    volumeCoordinate = Math.min(volumeCoordinate, 300);
+
+    var volume = (volumeCoordinate - 100)/10000;
+
+    gainNode.gain.value = volume || 0;
+  }
+});
