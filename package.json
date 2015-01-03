@@ -2,7 +2,7 @@
   "name": "theremin-leap",
   "version": "1.0.0",
   "description": "",
-  "main": "app/app.js",
+  "main": "app/audio.js",
   "dependencies": {},
   "devDependencies": {},
   "scripts": {

@@ -1,3 +1,5 @@
+// This is just the main leapjs demo code
+
 // Store frame for motion functions
 var previousFrame = null;
 var paused = false;
