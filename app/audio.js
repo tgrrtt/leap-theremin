@@ -61,21 +61,20 @@ var moogFilter = (function() {
 // for rn, watch moog value and set the volume accordingly.
 // the moog filter drastically lowers sound volume so we have to use something like 5 for default,
 // whereas a 5 would normally break ur speakers.
-var moog = true;
+var moog = false;
+var pinking = true;
 
-oscillator.connect(moogFilter);
-moogFilter.connect(gainNode);
+oscillator.connect(pinkingFilter);
+// moogFilter.connect(gainNode);
+pinkingFilter.connect(gainNode);
 gainNode.connect(audioCtx.destination);
 
 // create initial theremin frequency and volumn values
 
-var maxFreq = 6000;
-var maxVol = 0.02;
-
-var initialFreq = 200;
+var initialFreq = 0;
 
 // .00001 increments work
-var initialVol = 0;
+var initialVol = 0.00;
 
 // set options for the oscillator
 oscillator.type = 'sine';
@@ -107,7 +106,7 @@ Leap.loop(controllerOptions, function(frame) {
       volumeCoordinate = Math.max(volumeCoordinate, 60);
       volumeCoordinate = Math.min(volumeCoordinate, 400);
 
-      var volume = moog? (volumeCoordinate - 60)/ 10 : (volumeCoordinate - 60)/10000;
+      var volume = moog || pinking ? (volumeCoordinate - 60)/ 100 : (volumeCoordinate - 60)/1000;
 
       gainNode.gain.value = volume || 0;
     }
@@ -115,23 +114,32 @@ Leap.loop(controllerOptions, function(frame) {
     // frequency control section
     var right = frame.hands[0].type === "right" ? frame.hands[0] : frame.hands[1];
     if (right) {
-      // y should be a the pitch
+
+      // y should adjust the pitch
       // z should adjust the pitch
       //  the closer the hand gets towards antenna, the higher the pitch
       // the higher the hand gets, the higher the pitch
-      // when the hand is perpendicular to the leapmotion, z = 0. this should be the absolute minimum z value.
+
+      // right.pointables[0].tipPosition gives xyz coords of pointers (fingers)
+      // get the pointable with the lowest Z and use that for the pitch Z instead of palm
+
+      var z = 999;
+      for (var l = 0; l < right.pointables.length; l++) {
+        if (right.pointables[l].tipPosition[2] < z) {
+          z = right.pointables[l].tipPosition[2];
+        }
+      }
       var pitchCoordintateY = right.palmPosition[1];
-      var pitchCoordintateZ = right.palmPosition[2];
-      console.log(pitchCoordintateY, pitchCoordintateZ);
-      pitchCoordintateY = Math.max(pitchCoordintateY, 0);
-      pitchCoordintateY = Math.min(pitchCoordintateY, 250);
+      var pitchCoordintateZ = z;
 
-      pitchCoordintateZ = Math.max(pitchCoordintateZ, 0);
-      pitchCoordintateZ = Math.min(pitchCoordintateZ, 250);
-      
-      var hz = (0 + pitchCoordintateY) + (250 - pitchCoordintateZ);
+      pitchCoordintateY = Math.max(pitchCoordintateY, 60);
+      pitchCoordintateY = Math.min(pitchCoordintateY, 400);
+
+      pitchCoordintateZ = Math.max(pitchCoordintateZ, -100);
+      pitchCoordintateZ = Math.min(pitchCoordintateZ, 300);
+
+      var hz = (0 + pitchCoordintateY) + (500 - (2 * pitchCoordintateZ));
       oscillator.frequency.value = hz;
-
     }
   }
 });
