@@ -72,7 +72,7 @@ gainNode.connect(audioCtx.destination);
 var maxFreq = 6000;
 var maxVol = 0.02;
 
-var initialFreq = 3000;
+var initialFreq = 200;
 
 // .00001 increments work
 var initialVol = 0;
@@ -104,10 +104,10 @@ Leap.loop(controllerOptions, function(frame) {
       var volumeCoordinate = left.palmPosition[1];
 
       // volume should go from y = 100 to y = 300?
-      volumeCoordinate = Math.max(volumeCoordinate, 100);
+      volumeCoordinate = Math.max(volumeCoordinate, 60);
       volumeCoordinate = Math.min(volumeCoordinate, 400);
 
-      var volume = moog? (volumeCoordinate - 100)/ 10 : (volumeCoordinate - 100)/10000;
+      var volume = moog? (volumeCoordinate - 60)/ 10 : (volumeCoordinate - 60)/10000;
 
       gainNode.gain.value = volume || 0;
     }
@@ -115,12 +115,23 @@ Leap.loop(controllerOptions, function(frame) {
     // frequency control section
     var right = frame.hands[0].type === "right" ? frame.hands[0] : frame.hands[1];
     if (right) {
-      console.log(right.palmPosition);
-      // y should be a multiply the pitch
+      // y should be a the pitch
       // z should adjust the pitch
       //  the closer the hand gets towards antenna, the higher the pitch
       // the higher the hand gets, the higher the pitch
       // when the hand is perpendicular to the leapmotion, z = 0. this should be the absolute minimum z value.
+      var pitchCoordintateY = right.palmPosition[1];
+      var pitchCoordintateZ = right.palmPosition[2];
+      console.log(pitchCoordintateY, pitchCoordintateZ);
+      pitchCoordintateY = Math.max(pitchCoordintateY, 0);
+      pitchCoordintateY = Math.min(pitchCoordintateY, 250);
+
+      pitchCoordintateZ = Math.max(pitchCoordintateZ, 0);
+      pitchCoordintateZ = Math.min(pitchCoordintateZ, 250);
+      
+      var hz = (0 + pitchCoordintateY) + (250 - pitchCoordintateZ);
+      oscillator.frequency.value = hz;
+
     }
   }
 });
