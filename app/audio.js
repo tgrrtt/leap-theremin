@@ -64,6 +64,14 @@ var controllerOptions = {enableGestures: true};
 
 
 Leap.loop(controllerOptions, function(frame) {
+  var volume = 0;
+  var volumeCoordinate = 60;
+  var pitchCoordintateY = 60;
+  var pitchCoordintateZ = 300;
+
+  var circle = document.getElementById("circle");
+
+
   if (frame.hands.length > 0) {
     // volume control
     /////////////////
@@ -72,15 +80,18 @@ Leap.loop(controllerOptions, function(frame) {
     if (left) {
       
       // palmPosition is an array with [x,y,z] coordinates.
-      var volumeCoordinate = left.palmPosition[1];
+      volumeCoordinate = left.palmPosition[1];
 
       // volume should go from y = 100 to y = 300?
       volumeCoordinate = Math.max(volumeCoordinate, 60);
       volumeCoordinate = Math.min(volumeCoordinate, 400);
 
-      var volume = pinking ? (volumeCoordinate - 60)/ 100 : (volumeCoordinate - 60)/1000;
+      volume = pinking ? (volumeCoordinate - 60)/ 100 : (volumeCoordinate - 60)/1000;
 
       gainNode.gain.value = volume || 0;
+
+
+
     }
       
     // frequency control section
@@ -103,8 +114,8 @@ Leap.loop(controllerOptions, function(frame) {
           z = right.pointables[l].tipPosition[2];
         }
       }
-      var pitchCoordintateY = right.palmPosition[1];
-      var pitchCoordintateZ = z;
+      pitchCoordintateY = right.palmPosition[1];
+      pitchCoordintateZ = z;
 
       pitchCoordintateY = Math.max(pitchCoordintateY, 60);
       pitchCoordintateY = Math.min(pitchCoordintateY, 400);
@@ -114,6 +125,23 @@ Leap.loop(controllerOptions, function(frame) {
 
       var hz = (0 + pitchCoordintateY) + (500 - (2 * pitchCoordintateZ));
       oscillator.frequency.value = hz;
+
     }
+
   }
+
+  circle.style.height = volumeCoordinate-60  + "px";
+  circle.style.width = volumeCoordinate-60  + "px";
+  circle.style.borderRadius = (volumeCoordinate-60)/2 + "px";
+  
+  // so this terrible formula sets the default margin to 250 (500/2).
+  // its then set according to the height, so as the circle expands, it always does so evenly in all directions, rather than downwards
+  circle.style.margin = (500-volumeCoordinate-60)/2 + "px auto";
+
+  // some magic formula to come up with a color
+  // 765 possible color options (255*3)
+  circle.style.backgroundColor = "black";
+
+  // circle.style.backgroundColor = 'rgb(' + [r,g,b].join(',') + ')';
+
 });
