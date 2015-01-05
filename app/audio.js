@@ -28,44 +28,15 @@ var pinkingFilter = (function() {
     return node;
 })();
 
-var moogFilter = (function() {
-    var node = audioCtx.createScriptProcessor(bufferSize, 1, 1);
-    var in1, in2, in3, in4, out1, out2, out3, out4;
-    in1 = in2 = in3 = in4 = out1 = out2 = out3 = out4 = 0.0;
-    node.cutoff = 0.065; // between 0.0 and 1.0
-    node.resonance = 3.99; // between 0.0 and 4.0
-    node.onaudioprocess = function(e) {
-        var input = e.inputBuffer.getChannelData(0);
-        var output = e.outputBuffer.getChannelData(0);
-        var f = node.cutoff * 1.16;
-        var fb = node.resonance * (1.0 - 0.15 * f * f);
-        for (var i = 0; i < bufferSize; i++) {
-            input[i] -= out4 * fb;
-            input[i] *= 0.35013 * (f*f)*(f*f);
-            out1 = input[i] + 0.3 * in1 + (1 - f) * out1; // Pole 1
-            in1 = input[i];
-            out2 = out1 + 0.3 * in2 + (1 - f) * out2; // Pole 2
-            in2 = out1;
-            out3 = out2 + 0.3 * in3 + (1 - f) * out3; // Pole 3
-            in3 = out2;
-            out4 = out3 + 0.3 * in4 + (1 - f) * out4; // Pole 4
-            in4 = out3;
-            output[i] = out4;
-        }
-    }
-    return node;
-})();
-
 // connect oscillator to gain node to speakers
 
-// for rn, watch moog value and set the volume accordingly.
-// the moog filter drastically lowers sound volume so we have to use something like 5 for default,
+// for rn, watch pinking value and set the volume accordingly.
+// the pinking filter drastically lowers sound volume so we have to use something like 5 for default,
 // whereas a 5 would normally break ur speakers.
-var moog = false;
+
 var pinking = true;
 
 oscillator.connect(pinkingFilter);
-// moogFilter.connect(gainNode);
 pinkingFilter.connect(gainNode);
 gainNode.connect(audioCtx.destination);
 
@@ -84,21 +55,22 @@ oscillator.start();
 gainNode.gain.value = initialVol;
 
 
-// Store frame for motion functions
-var previousFrame = null;
+// Leap Loop Section
+////////////////////////////
+
 
 // Setup Leap loop with frame callback function
 var controllerOptions = {enableGestures: true};
 
-// to use HMD mode:
-// controllerOptions.optimizeHMD = true;
 
 Leap.loop(controllerOptions, function(frame) {
   if (frame.hands.length > 0) {
     // volume control
+    /////////////////
     var left = frame.hands[0].type === "left" ? frame.hands[0] : frame.hands[1];
 
     if (left) {
+      
       // palmPosition is an array with [x,y,z] coordinates.
       var volumeCoordinate = left.palmPosition[1];
 
@@ -106,12 +78,14 @@ Leap.loop(controllerOptions, function(frame) {
       volumeCoordinate = Math.max(volumeCoordinate, 60);
       volumeCoordinate = Math.min(volumeCoordinate, 400);
 
-      var volume = moog || pinking ? (volumeCoordinate - 60)/ 100 : (volumeCoordinate - 60)/1000;
+      var volume = pinking ? (volumeCoordinate - 60)/ 100 : (volumeCoordinate - 60)/1000;
 
       gainNode.gain.value = volume || 0;
     }
       
     // frequency control section
+    /////////////////////////////
+
     var right = frame.hands[0].type === "right" ? frame.hands[0] : frame.hands[1];
     if (right) {
 
